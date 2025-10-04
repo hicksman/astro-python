@@ -1,0 +1,76 @@
+--Сопоставление объектов из 2 астрономических каталогов, по координатам
+import numpy as np
+import math
+#вычисляет расстояние между 2 точками на сфере по их широтеи долготе
+def angular_dist(ra1, d1, ra2, d2):
+#Градусы или радианы — Тригонометрические функции math.sin, math.cos и math.asin принимают аргументы в радианах, не в градусах.
+  ra1 = math.radians(ra1)
+  ra2 = math.radians(ra2)
+  d1 = math.radians(d1)
+  d2 = math.radians(d2)
+  delta_ra = ra1-ra2
+  delta_d =d1-d2
+ 
+  c= math.sin(delta_d/2)**2 + math.cos(d1) * math.cos(d2) * math.sin(delta_ra/2)**2
+  d=2*math.asin(math.sqrt(c))
+#результат в градусах
+  return math.degrees(d)
+
+def hms2dec(a,b,c):
+  degrees = 15*(a + b/60 + c/(60*60))
+  return degrees
+
+def dms2dec(a,b,c):
+  degrees = 0
+  if a > 0:
+    degrees = a + b/60 + c/(60*60)
+  if a < 0:
+    degrees = -1*(-a + b/60 + c/(60*60))
+  return degrees
+
+
+def import_bss():
+  catalog = np.genfromtxt('bss.dat', dtype=str, usecols=range(0, 7)) #превращает все в текст
+  result = [
+  (
+  int(row[0].replace('*', '')), 
+  hms2dec(float(row[1]),float(row[2]),float(row[3])), 
+  dms2dec(float(row[4]),float(row[5]), float(row[6]))
+         ) 
+  for row in catalog[:]
+  ]
+  return result
+
+def import_super():
+  cat = np.loadtxt('super.csv', delimiter=',', skiprows=1, usecols=[0, 1])
+  result = [(i + 1, row[0], row[1]) for i, row in enumerate(cat[:])] #- - enumerate нумерует индекс здесь
+  return result
+
+
+def find_closest(cat, ra, decl):
+  dist = 500
+  id = 0
+  for row in cat:
+    ad = angular_dist(ra, decl, row[1], row[2])
+    if ad < dist:
+      dist = ad
+      id = row[0]
+  return id, dist
+
+def crossmatch(bss_cat, super_cat, max_dist):
+  matches = []
+  no_matches = []
+  for row_bss in bss_cat:
+    min_dist = 5000
+    match_id = None
+    for row_super in super_cat:
+      ad = angular_dist(row_bss[1], row_bss[2], row_super[1], row_super[2])
+      if ad < min_dist:
+        min_dist = ad
+        match_id = row_super[0]
+    if min_dist <= max_dist:
+      matches.append((row_bss[0], match_id, min_dist))
+    else:
+      no_matches.append(row_bss[0])
+  return matches, no_matches
+  
