@@ -1,0 +1,36 @@
+import numpy as np
+import time
+
+def angular_dist(r1, d1, r2, d2):
+  a = np.sin(np.abs(d1 - d2)/2)**2
+  b = np.cos(d1)*np.cos(d2)*np.sin(np.abs(r1 - r2)/2)**2
+  return 2*np.arcsin(np.sqrt(a + b))
+
+
+def crossmatch(cat1, cat2, max_radius):
+  start = time.perf_counter()  # Запоминаем текущее время для замера скорости выполнения функции.
+  max_radius = np.radians(max_radius)  # Т.к. угловые расстояния считаются в радианах, радиус тоже нужно перевести.
+
+  matches = []  # matches — хранит кортежи вида (id1, id2, расстояние)
+  no_matches = []  # no_matches — id объектов из cat1, у которых нет близких объектов в cat2
+  cat1 = np.radians(cat1)
+  cat2 = np.radians(cat2)
+  ra2s, dec2s = cat2[:,0], cat2[:,1]
+
+  for id1, i in enumerate(range(0, len(cat1))):
+      min_dist = np.inf  # — это положительная бесконечность в NumPy, или min_dist = float('inf')
+      min_id2 = None
+      dists = angular_dist(cat1[i][0], cat1[i][1], ra2s, dec2s)
+      for id2, dist in enumerate(dists):
+          if dist < min_dist:
+              min_id2 = id2
+              min_dist = dist
+
+      # Ignore match if it's outside the maximum radius
+      if min_dist > max_radius:
+          no_matches.append(id1)
+      else:
+          matches.append((id1, min_id2, np.degrees(min_dist)))
+
+  time_taken = time.perf_counter() - start  # Считаем, сколько времени занял весь процесс сопоставления.
+  return matches, no_matches, time_taken
