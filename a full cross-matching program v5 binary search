@@ -20,7 +20,7 @@ def crossmatch(cat1, cat2, max_radius):
   cat1 = np.radians(cat1)
   cat2 = np.radians(cat2)
   
-  order = np.argsort(cat2[:, 1]) # это индексы
+  order = np.argsort(cat2[:, 1]) # это индексы, которые упорядочивают cat2 по dec
   cat2_ordered = cat2[order] # Ты берёшь массив cat2 и переставляешь строки в новом порядке, заданном индексами order.
 
 
@@ -43,7 +43,7 @@ def crossmatch(cat1, cat2, max_radius):
     start_index = np.searchsorted(dec2_sorted, dec_min, side = 'left')
     stop_index = np.searchsorted(dec2_sorted, dec_max, side = 'left')
     for id2 in range(start_index, stop_index):
-      ra2, dec2 = cat2_ordered[id2]
+      ra2, dec2 = cat2_ordered[id2] #Это распаковка координат объекта с индексом id2 в массиве cat2_ordered
       dist = angular_dist(ra1, dec1, ra2, dec2)
       if dist < min_dist:
         min_id2 = order[id2]
