@@ -1,0 +1,53 @@
+from astropy.coordinates import SkyCoord
+from astropy import units as u
+import numpy as np
+import time
+
+
+def crossmatch(cat1, cat2, max_radius):
+    start = time.perf_counter()  # Запоминаем текущее время для замера скорости выполнения функции.
+    coords1 = cat1.tolist()
+    coords2 = cat2.tolist()
+
+    matches = []  # matches — хранит кортежи вида (id1, id2, расстояние)
+    no_matches = []  # no_matches — id объектов из cat1, у которых нет близких объектов в cat2
+
+    sky_cat1 = SkyCoord(coords1 * u.degree, frame='icrs')
+    sky_cat2 = SkyCoord(coords2 * u.degree, frame='icrs')
+    closest_ids, closest_dists, closest_dists3d = sky_cat1.match_to_catalog_sky(sky_cat2)
+    for id1, (id2, dist) in enumerate(zip(closest_ids, closest_dists)):
+        if dist < max_radius * u.degree:
+            matches.append((id1, id2, dist.deg))
+        else:
+            no_matches.append(id1)
+
+    time_taken = time.perf_counter() - start  # Считаем, сколько времени занял весь процесс сопоставления.
+    return matches, no_matches, time_taken
+
+
+
+# You can use this to test your function.
+# Any code inside this `if` statement will be ignored by the automarker.
+if __name__ == '__main__':
+  # The example in the question
+  cat1 = np.array([[180, 30], [45, 10], [300, -45]])
+  cat2 = np.array([[180, 32], [55, 10], [302, -44]])
+  matches, no_matches, time_taken = crossmatch(cat1, cat2, 5)
+  print('matches:', matches)
+  print('unmatched:', no_matches)
+  print('time taken:', time_taken)
+
+  # A function to create a random catalogue of size n
+  def create_cat(n):
+    ras = np.random.uniform(0, 360, size=(n, 1))
+    decs = np.random.uniform(-90, 90, size=(n, 1))
+    return np.hstack((ras, decs))
+
+  # Test your function on random inputs
+  np.random.seed(0)
+  cat1 = create_cat(10)
+  cat2 = create_cat(20)
+  matches, no_matches, time_taken = crossmatch(cat1, cat2, 5)
+  print('matches:', matches)
+  print('unmatched:', no_matches)
+  print('time taken:', time_taken)
