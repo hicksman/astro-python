@@ -1,0 +1,12 @@
+import psycopg2
+import numpy as np
+def column_stats(table,column):
+  conn = psycopg2.connect(dbname='db', user='grok')
+  cursor = conn.cursor()
+
+  cursor.execute('SELECT ' + column + ' FROM ' + table + ';')
+
+  records = cursor.fetchall()
+  array = np.array(records)
+
+  return np.mean(array), np.median(array)
