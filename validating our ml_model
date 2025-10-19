@@ -1,0 +1,32 @@
+import numpy as np
+from sklearn.tree import DecisionTreeRegressor
+
+# paste your get_features_targets function here
+def get_features_targets(data):
+  features = np.array([data['u'] - data['g'], data['g'] - data['r'], data['r'] - data['i'], data['i'] - data['z']]).T
+  targets = np.array(data['redshift'])
+  return features, targets
+
+def median_diff(predicted, actual):
+  result = np.median(abs(predicted - actual))
+  return result
+
+# write a function that splits the data into training and testing subsets
+# trains the model and returns the prediction accuracy with median_diff
+def validate_model(model, features, targets):
+  # split the data into training and testing features and predictions
+  split = features.shape[0]//2
+  train_features = features[:split]
+  test_features = features[split:]
+  train_targets = targets[:split]
+  test_targets = targets[split:]
+  
+  # train the model
+  dtr = DecisionTreeRegressor() # initialize model
+  dtr.fit(train_features, train_targets) # train the model
+  
+  # get the predicted_redshifts
+  predictions = dtr.predict(test_features)# make predictions using the same features
+  
+  # use median_diff function to calculate the accuracy
+  return median_diff(test_targets, predictions)
